@@ -1,32 +1,86 @@
-import React from 'react';
-import { BookOpen } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Film, Moon, Sun } from 'lucide-react';
+import SearchBar from './SearchBar';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ searchQuery, onSearchChange }) => {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check for saved theme preference or use system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme === 'dark';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  // Update theme when darkMode state changes
+  useEffect(() => {
+    const root = window.document.documentElement;
+    
+    if (isDarkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+  
+  // Add scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+  
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm">
-      <div className="container mx-auto px-4 py-4 max-w-5xl">
+    <header 
+      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm py-3' 
+          : 'bg-transparent py-5'
+      }`}
+    >
+      <div className="container mx-auto px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <div className="bg-indigo-600 text-white p-2 rounded-lg mr-3">
-              <BookOpen size={24} />
+            <div className="text-purple-600 dark:text-purple-400 mr-2">
+              <Film size={28} />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Smart Tutor</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Your AI learning companion</p>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              FilmFinder
+            </h1>
           </div>
           
-          <nav className="hidden md:flex space-x-4">
-            <a href="#" className="text-gray-600 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
-            <a href="#" className="text-gray-600 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">My Subjects</a>
-            <a href="#" className="text-gray-600 hover:text-indigo-600 dark:text-gray-300 dark:hover:text-indigo-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Bookmarks</a>
-          </nav>
+          <div className="flex-1 max-w-xl mx-auto px-4">
+            <SearchBar 
+              value={searchQuery} 
+              onChange={onSearchChange} 
+            />
+          </div>
           
-          <button className="md:hidden text-gray-500 dark:text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          <div>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
         </div>
       </div>
     </header>
